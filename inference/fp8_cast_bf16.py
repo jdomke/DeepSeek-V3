@@ -80,10 +80,11 @@ def main(fp8_path, bf16_path):
                 try:
                     # Get scale_inv from the correct file
                     scale_inv = get_tensor(scale_inv_name)
-                    scale_inv.to(device="cuda")
+                    scale_inv = scale_inv.to(device="cuda")
+                    weight = weight.to(device="cuda")
                     fp8_weight_names.append(weight_name)
                     new_state_dict[weight_name] = weight_dequant(weight, scale_inv)
-                    new_state_dict[weight_name].to(device="cpu")
+                    new_state_dict[weight_name] = new_state_dict[weight_name].to(device="cpu")
                     del scale_inv
                 except KeyError:
                     print(f"Warning: Missing scale_inv tensor for {weight_name}, skipping conversion")
