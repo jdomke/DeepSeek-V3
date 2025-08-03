@@ -99,7 +99,7 @@ def weight_dequant(x: torch.Tensor, s: torch.Tensor, block_size: int = 128) -> t
     assert x.is_contiguous() and s.is_contiguous(), 'Input tensors must be contiguous'
     assert x.dim() == 2 and s.dim() == 2, 'Input tensors must have 2 dimensions'
     M, N = x.size()
-    y = torch.empty_like(x, dtype=torch.get_default_dtype(), device="cuda:2")
+    y = torch.empty_like(x, dtype=torch.get_default_dtype(), device="cuda")
     grid = lambda meta: (triton.cdiv(M, meta['BLOCK_SIZE']), triton.cdiv(N, meta['BLOCK_SIZE']))
     weight_dequant_kernel[grid](x, s, y, M, N, BLOCK_SIZE=block_size)
     return y
