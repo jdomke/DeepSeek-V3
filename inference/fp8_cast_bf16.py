@@ -86,6 +86,8 @@ def main(fp8_path, bf16_path):
                     new_state_dict[weight_name] = weight
             else:
                 new_state_dict[weight_name] = weight
+            del weight
+            torch.cuda.empty_cache()
 
         new_safetensor_file = os.path.join(bf16_path, file_name)
         save_file(new_state_dict, new_safetensor_file)
