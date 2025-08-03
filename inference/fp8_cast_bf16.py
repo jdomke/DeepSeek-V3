@@ -58,7 +58,7 @@ def main(fp8_path, bf16_path):
         if file_name not in loaded_files:
             file_path = os.path.join(fp8_path, file_name)
             loaded_files[file_name] = load_file(file_path, device="cpu") #"cuda")
-            tmp = loaded_files[file_name][tensor_name].to(device="cuda")
+            tmp = loaded_files[file_name][tensor_name].to(device="cuda:1")
             return tmp
         else:
             return loaded_files[file_name][tensor_name]
@@ -67,7 +67,7 @@ def main(fp8_path, bf16_path):
     safetensor_files.sort()
     for safetensor_file in tqdm(safetensor_files):
         file_name = os.path.basename(safetensor_file)
-        current_state_dict = load_file(safetensor_file, device="cuda")
+        current_state_dict = load_file(safetensor_file, device="cuda:0")
         loaded_files[file_name] = current_state_dict
 
         new_state_dict = {}
