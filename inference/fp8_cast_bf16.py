@@ -57,9 +57,11 @@ def main(fp8_path, bf16_path):
         file_name = weight_map[tensor_name]
         if file_name not in loaded_files:
             file_path = os.path.join(fp8_path, file_name)
-            loaded_files[file_name] = load_file(file_path, device="cpu") #"cuda")
-            tmp = loaded_files[file_name][tensor_name].to(device="cuda:1")
-            return tmp
+            tmp = load_file(file_path, device="cpu")
+            t = tmp[tensor_name]
+            t.to(device="cuda:1")
+            del tmp
+            return t
         else:
             return loaded_files[file_name][tensor_name]
 
@@ -81,6 +83,7 @@ def main(fp8_path, bf16_path):
                     scale_inv = get_tensor(scale_inv_name)
                     fp8_weight_names.append(weight_name)
                     new_state_dict[weight_name] = weight_dequant(weight, scale_inv)
+                    del scale_inv
                 except KeyError:
                     print(f"Warning: Missing scale_inv tensor for {weight_name}, skipping conversion")
                     new_state_dict[weight_name] = weight
@@ -92,11 +95,8 @@ def main(fp8_path, bf16_path):
         new_safetensor_file = os.path.join(bf16_path, file_name)
         save_file(new_state_dict, new_safetensor_file)
 
-        # Memory management: keep only the 2 most recently used files
-        if len(loaded_files) > 0:   #dont have that much mem
-            oldest_file = next(iter(loaded_files))
-            del loaded_files[oldest_file]
-            torch.cuda.empty_cache()
+        del loaded_files[file_name]
+        torch.cuda.empty_cache()
 
     # Update model index
     new_model_index_file = os.path.join(bf16_path, "model.safetensors.index.json")
