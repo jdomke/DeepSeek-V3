@@ -59,7 +59,6 @@ def main(fp8_path, bf16_path):
             file_path = os.path.join(fp8_path, file_name)
             tmp = load_file(file_path, device="cpu")
             t = tmp[tensor_name]
-            t.to(device="cuda")
             del tmp
             return t
         else:
@@ -69,7 +68,7 @@ def main(fp8_path, bf16_path):
     safetensor_files.sort()
     for safetensor_file in tqdm(safetensor_files):
         file_name = os.path.basename(safetensor_file)
-        current_state_dict = load_file(safetensor_file, device="cuda")
+        current_state_dict = load_file(safetensor_file, device="cpu")
         loaded_files[file_name] = current_state_dict
 
         new_state_dict = {}
@@ -81,8 +80,10 @@ def main(fp8_path, bf16_path):
                 try:
                     # Get scale_inv from the correct file
                     scale_inv = get_tensor(scale_inv_name)
+                    scale_inv.to(device="cuda")
                     fp8_weight_names.append(weight_name)
                     new_state_dict[weight_name] = weight_dequant(weight, scale_inv)
+                    new_state_dict[weight_name].to(device="cpu")
                     del scale_inv
                 except KeyError:
                     print(f"Warning: Missing scale_inv tensor for {weight_name}, skipping conversion")
